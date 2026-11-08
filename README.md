@@ -11,9 +11,8 @@ A community collection of ready-made automations for [NexFlow](https://github.co
 
 ## Status / 進度
 
-Progress is tracked in the NexFlow Flow Store GitHub Project.
-
-進度記錄在 GitHub Project「NexFlow Flow Store」。
+- Store repo setup / 商店 repo 本身：[#1](https://github.com/ADSFAaron/nexflow-flow-store/issues/1)
+- App side, starting point / App 端起點：[ADSFAaron/NexFlow#12](https://github.com/ADSFAaron/NexFlow/issues/12)
 
 ## ⚠️ Do not rename this repository / 請勿更改此 repo 名稱
 

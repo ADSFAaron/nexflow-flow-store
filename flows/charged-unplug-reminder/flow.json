@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "ac6bf404-52fe-4db2-aa38-27887b13ad75",
+  "name": "Unplug reminder",
+  "description": "While charging, tells you when the battery passes 90%. Many people stop there to keep the battery healthy over the years.",
+  "tags": [
+    "battery",
+    "charging"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "ebe25b27-a1d4-4e92-bc31-c6c67742c1f6",
+      "type": "BATTERY",
+      "config": {
+        "level": "90",
+        "direction": "ABOVE",
+        "charging": "CHARGING"
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "d011118c-63b8-4e09-b6ee-0e603faf9106",
+      "type": "NOTIFICATION",
+      "config": {
+        "title": "Battery at 90%",
+        "message": "You can unplug the charger now.",
+        "tap_action": "NONE"
+      },
+      "order": 0,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

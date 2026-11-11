@@ -1,0 +1,44 @@
+{
+  "slug": "home-wifi-ringer",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Ringer on at home",
+      "description": "When your phone joins your home Wi-Fi, turns Do Not Disturb off and the ringer up to 80%. You enter your Wi-Fi name when installing."
+    },
+    "zh-TW": {
+      "title": "到家開啟鈴聲",
+      "description": "手機連上家裡的 Wi-Fi 時，關閉「零打擾」並把鈴聲調到 80%。Wi-Fi 名稱在安裝時填寫。"
+    },
+    "zh-CN": {
+      "title": "到家开启铃声",
+      "description": "手机连上家里的 Wi-Fi 时，关闭“勿扰模式”并把铃声调到 80%。Wi-Fi 名称在安装时填写。"
+    },
+    "ja": {
+      "title": "帰宅したら着信音オン",
+      "description": "自宅の Wi-Fi につながったら「サイレントモード」をオフにし、着信音量を 80% にします。Wi-Fi 名はインストール時に入力します。"
+    }
+  },
+  "tags": [
+    "home",
+    "wifi",
+    "sound"
+  ],
+  "setup": [
+    {
+      "id": "home_wifi",
+      "target": {
+        "kind": "trigger",
+        "item": "6f184d03-f5a6-4907-8814-23b34a96b419",
+        "key": "ssid"
+      },
+      "label": {
+        "en": "Your home Wi-Fi name",
+        "zh-TW": "家裡的 Wi-Fi 名稱",
+        "zh-CN": "家里的 Wi-Fi 名称",
+        "ja": "自宅の Wi-Fi 名"
+      },
+      "secret": false
+    }
+  ]
+}

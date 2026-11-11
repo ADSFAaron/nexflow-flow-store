@@ -1,0 +1,43 @@
+{
+  "slug": "headphones-music",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Music when headphones go in",
+      "description": "When you plug in wired headphones, sets media volume to 40% and opens your music app. You pick the app when installing."
+    },
+    "zh-TW": {
+      "title": "插耳機開音樂",
+      "description": "插上有線耳機時，把媒體音量設為 40% 並打開你的音樂 App。要開哪個 App 在安裝時選擇。"
+    },
+    "zh-CN": {
+      "title": "插耳机开音乐",
+      "description": "插上有线耳机时，把媒体音量设为 40% 并打开你的音乐 App。要打开哪个 App 在安装时选择。"
+    },
+    "ja": {
+      "title": "イヤホンで音楽",
+      "description": "有線イヤホンを挿すと、メディアの音量を 40% にして音楽アプリを開きます。開くアプリはインストール時に選びます。"
+    }
+  },
+  "tags": [
+    "audio",
+    "headphones"
+  ],
+  "setup": [
+    {
+      "id": "music_app",
+      "target": {
+        "kind": "action",
+        "item": "af015b16-c16f-4679-ac92-78839f528331",
+        "key": "package_name"
+      },
+      "label": {
+        "en": "Your music app",
+        "zh-TW": "你的音樂 App",
+        "zh-CN": "你的音乐 App",
+        "ja": "使う音楽アプリ"
+      },
+      "secret": false
+    }
+  ]
+}

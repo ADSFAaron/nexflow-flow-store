@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "efc939d9-28cc-4d0a-8489-abc71130ca99",
+  "name": "Weekday morning sound",
+  "description": "At 07:00 on weekdays, turns Do Not Disturb off and sets the ringer to 70%, so you don't miss calls after a quiet night. Pairs well with “Bedtime quiet”.",
+  "tags": [
+    "morning",
+    "sound"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "09de3406-7af5-4587-a49e-6f53e025e7d2",
+      "type": "TIME",
+      "config": {
+        "time": "07:00",
+        "repeat": "WEEKDAYS",
+        "days": ""
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "e0cacca1-6205-4c9c-a458-d47fa67b6935",
+      "type": "DND_TOGGLE",
+      "config": {
+        "state": "OFF"
+      },
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "7dc7d9e9-c439-4a97-b473-57f6adf4db20",
+      "type": "VOLUME_ADJUST",
+      "config": {
+        "stream": "RING",
+        "volume_percent": "70"
+      },
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "7165ec41-5bfb-40a1-8976-a5beb8a693fa",
+      "type": "NOTIFICATION",
+      "config": {
+        "title": "Good morning",
+        "message": "Sound is back on.",
+        "tap_action": "NONE"
+      },
+      "order": 2,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

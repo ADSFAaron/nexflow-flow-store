@@ -1,0 +1,28 @@
+{
+  "slug": "bedtime-quiet",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Bedtime quiet",
+      "description": "At 23:00 every night, turns on Do Not Disturb, lowers media volume to 20% and dims the screen. Change the time after installing if you go to bed earlier or later."
+    },
+    "zh-TW": {
+      "title": "睡前安靜模式",
+      "description": "每天晚上 23:00 開啟「零打擾」，把媒體音量降到 20%，並調暗螢幕。安裝後可以依自己的作息改時間。"
+    },
+    "zh-CN": {
+      "title": "睡前安静模式",
+      "description": "每天晚上 23:00 开启“勿扰模式”，把媒体音量降到 20%，并调暗屏幕。安装后可以按自己的作息修改时间。"
+    },
+    "ja": {
+      "title": "おやすみモード",
+      "description": "毎晩 23:00 に「サイレントモード」をオンにし、メディアの音量を 20% に下げて画面を暗くします。時刻はインストール後に変更できます。"
+    }
+  },
+  "tags": [
+    "sleep",
+    "sound",
+    "display"
+  ],
+  "setup": []
+}

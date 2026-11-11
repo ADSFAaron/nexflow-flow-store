@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "a04ebd7a-d781-4b4a-8402-31258f847864",
+  "name": "Ringer on at home",
+  "description": "When your phone joins your home Wi-Fi, turns Do Not Disturb off and the ringer up to 80%. You enter your Wi-Fi name when installing.",
+  "tags": [
+    "home",
+    "wifi",
+    "sound"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "6f184d03-f5a6-4907-8814-23b34a96b419",
+      "type": "WIFI",
+      "config": {
+        "event": "CONNECTED",
+        "ssid": ""
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "4d1394cf-2488-441e-9424-9438edad282b",
+      "type": "DND_TOGGLE",
+      "config": {
+        "state": "OFF"
+      },
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "85e09ca7-a7f0-4886-9d88-cd06d92f1a2b",
+      "type": "VOLUME_ADJUST",
+      "config": {
+        "stream": "RING",
+        "volume_percent": "80"
+      },
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "fe42162c-428f-4a3f-b7fe-05bc8921358d",
+      "type": "TOAST",
+      "config": {
+        "message": "Home — ringer on"
+      },
+      "order": 2,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

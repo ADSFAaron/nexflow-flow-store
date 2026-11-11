@@ -1,0 +1,27 @@
+{
+  "slug": "low-battery-saver",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Low battery saver",
+      "description": "When the battery drops below 20% and the phone is not charging, dims the screen to 30%, lowers media volume and tells you it did."
+    },
+    "zh-TW": {
+      "title": "低電量省電",
+      "description": "電量低於 20% 且沒有在充電時，把螢幕亮度調到 30%、降低媒體音量，並通知你已經做了這些調整。"
+    },
+    "zh-CN": {
+      "title": "低电量省电",
+      "description": "电量低于 20% 且未在充电时，把屏幕亮度调到 30%、降低媒体音量，并通知你已完成这些调整。"
+    },
+    "ja": {
+      "title": "低バッテリー節電",
+      "description": "充電していない状態でバッテリーが 20% を下回ると、画面の明るさを 30% にし、メディアの音量を下げて、そのことを通知します。"
+    }
+  },
+  "tags": [
+    "battery",
+    "display"
+  ],
+  "setup": []
+}

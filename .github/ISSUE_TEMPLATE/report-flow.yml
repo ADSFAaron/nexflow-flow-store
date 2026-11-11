@@ -1,0 +1,41 @@
+name: Report a flow
+description: Tell the maintainers about a flow that is harmful, broken, or should not be here.
+title: "Report: "
+labels: [report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports are read by the store's maintainers; see [MODERATION.md](https://github.com/ADSFAaron/nexflow-flow-store/blob/master/MODERATION.md) for what happens next. To report a security problem with the store itself, use [private vulnerability reporting](https://github.com/ADSFAaron/nexflow-flow-store/security/advisories/new) instead.
+
+        檢舉由商店維護者處理，流程見 MODERATION.md。商店本身的資安問題請改用 private vulnerability reporting。
+  - type: input
+    id: slug
+    attributes:
+      label: Slug
+      description: The flow's id, from its store page or the app.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Reason
+      options:
+        - Harmful or malicious (sends data, costs money, does something it doesn't say)
+        - Broken (doesn't work, or no longer works)
+        - Contains personal information
+        - Copied without permission
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What happened
+      description: What you saw, on which phone and NexFlow version. Don't include your own personal information.
+    validations:
+      required: true

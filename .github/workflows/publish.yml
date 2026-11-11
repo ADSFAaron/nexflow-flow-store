@@ -1,0 +1,175 @@
+name: publish
+
+# Builds the store, signs it, deploys it to GitHub Pages, and checks what got deployed.
+#
+#   build   flow-store-tools at the commit in .github/nexflow-tools.ref (a fixed SHA, changed only
+#           by a reviewed PR) writes index.json, the bundles and the web pages. No secrets.
+#   sign    waits for a maintainer to approve the `production` environment, then signs index.json
+#           with Ed25519 using plain openssl. No NexFlow code runs in the job that holds the key.
+#   deploy  GitHub Pages.
+#   smoke   downloads what Pages now serves and checks the signature and every bundle's sha256,
+#           the same checks the app makes.
+#
+# The app reads https://adsfaaron.github.io/nexflow-flow-store/ — never rename this repository
+# or the ADSFAaron account (README.md).
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+env:
+  SITE_URL: https://adsfaaron.github.io/nexflow-flow-store
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      generated-at: ${{ steps.index.outputs.generated-at }}
+    steps:
+      - name: Check out the store
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: store
+          persist-credentials: false
+
+      - name: Read the pinned NexFlow commit
+        id: pin
+        run: |
+          ref=$(tr -d '[:space:]' < store/.github/nexflow-tools.ref)
+          if ! [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error file=.github/nexflow-tools.ref::must hold one full 40-character commit SHA"
+            exit 1
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Build flow-store-tools
+        id: tools
+        uses: ./store/.github/actions/flow-store-tools
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+
+      - name: Work out each flow's author
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          python3 -I store/.github/scripts/authors.py --repo "$REPO" \
+            $(find store/flows -mindepth 1 -maxdepth 1 -type d -exec basename {} \;) > authors.json
+          cat authors.json
+
+      - name: Build the index, bundles and pages
+        id: index
+        env:
+          TOOLS: ${{ steps.tools.outputs.bin }}
+          CATALOG: ${{ steps.tools.outputs.catalog }}
+        run: |
+          now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          "$TOOLS" build-index --repo store --catalog "$CATALOG" --out site --authors authors.json --now "$now"
+          touch site/.nojekyll
+          echo "generated-at=$now" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned-site
+          path: site
+          include-hidden-files: true
+          retention-days: 7
+
+  sign:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the public keys
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: keys
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: unsigned-site
+          path: site
+
+      - name: Sign index.json
+        env:
+          SIGNING_KEY: ${{ secrets.FLOW_STORE_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key="$RUNNER_TEMP/signing.pem"
+          trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$SIGNING_KEY" > "$key"
+          openssl pkeyutl -sign -rawin -inkey "$key" -in site/index.json -out site/index.json.sig
+          # Fail here, not in the app, if the secret and keys/current.pub are not a pair.
+          openssl pkeyutl -verify -rawin -pubin -inkey keys/current.pub \
+            -in site/index.json -sigfile site/index.json.sig
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+          include-hidden-files: true
+
+  deploy:
+    needs: sign
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  smoke:
+    needs: [build, deploy]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the public keys
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: keys
+          persist-credentials: false
+
+      - name: Check what Pages serves
+        env:
+          EXPECTED: ${{ needs.build.outputs.generated-at }}
+        run: |
+          set -euo pipefail
+          # Pages sits behind a CDN; a query string gets past its cache.
+          bust="?run=$GITHUB_RUN_ID"
+          for attempt in 1 2 3 4 5 6; do
+            curl -fsS "$SITE_URL/index.json$bust" -o index.json
+            if [ "$(jq -r .generated_at index.json)" = "$EXPECTED" ]; then break; fi
+            echo "Pages still serves an older index; waiting ($attempt)"
+            sleep 20
+          done
+          test "$(jq -r .generated_at index.json)" = "$EXPECTED"
+          curl -fsS "$SITE_URL/index.json.sig$bust" -o index.json.sig
+          openssl pkeyutl -verify -rawin -pubin -inkey keys/current.pub -in index.json -sigfile index.json.sig
+          jq -r '.flows[] | "\(.bundle) \(.sha256)"' index.json | while read -r bundle sha; do
+            actual=$(curl -fsS "$SITE_URL/$bundle$bust" | sha256sum | cut -d' ' -f1)
+            if [ "$actual" != "$sha" ]; then
+              echo "::error::$bundle: sha256 $actual, index says $sha"
+              exit 1
+            fi
+          done
+          curl -fsS "$SITE_URL/$bust" -o /dev/null
+          echo "Signature and $(jq '.flows | length' index.json) bundles check out."

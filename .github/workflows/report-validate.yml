@@ -1,0 +1,81 @@
+name: report validation
+
+# Comments validate's result on the pull request, and mentions a flow's original author when
+# someone else changes it.
+#
+# Why a separate workflow: a pull request from a fork gets a read-only token, so validate cannot
+# comment. workflow_run runs THIS file from the default branch with a token that can, and it never
+# checks out or runs anything from the pull request. The artifact it downloads is untrusted (the
+# fork could have rewritten validate.yml to write anything), so render_report.py reads it as data
+# only. Which pull request, which files changed, and who the original authors are all come from
+# the GitHub API, not from the artifact.
+
+on:
+  workflow_run:
+    workflows: [validate]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check out the scripts (default branch)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+
+      - name: Comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          number=$(gh pr list -R "$REPO" --state open --search "$HEAD_SHA" --json number,headRefOid \
+            -q ".[] | select(.headRefOid == \"$HEAD_SHA\") | .number" | head -n1)
+          if [ -z "$number" ]; then
+            echo "No open pull request has $HEAD_SHA as its head any more; nothing to report."
+            exit 0
+          fi
+
+          untrusted="$RUNNER_TEMP/untrusted"
+          mkdir -p "$untrusted"
+          gh run download "$RUN_ID" -R "$REPO" -n validate-result -D "$untrusted" || true
+
+          # Whoever opened the PR and whoever wrote its commits. A PR from the submission App is
+          # opened by the App, but its commit is authored as the person who filed the issue.
+          authors=$( { gh pr view "$number" -R "$REPO" --json author -q .author.login
+                       gh api --paginate "repos/$REPO/pulls/$number/commits" -q '.[].author.login // empty'
+                     } | sort -u)
+          owners=()
+          slugs=$(gh api --paginate "repos/$REPO/pulls/$number/files" -q '.[].filename' \
+            | sed -n 's#^flows/\([a-z0-9-]*\)/.*#\1#p' | sort -u)
+          if [ -n "$slugs" ]; then
+            # Original authors of flows already on master (new flows have none). Same rule as publish.
+            for first in $(python3 -I .github/scripts/authors.py --repo "$REPO" $slugs | jq -r '.[]' | sort -u); do
+              if ! grep -qxF "$first" <<< "$authors"; then owners+=(--owner "$first"); fi
+            done
+          fi
+
+          python3 -I .github/scripts/render_report.py "$untrusted/result.json" \
+            --conclusion "$CONCLUSION" --run-url "$RUN_URL" "${owners[@]}" > "$RUNNER_TEMP/body.md"
+
+          existing=$(gh api --paginate "repos/$REPO/issues/$number/comments" \
+            -q '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- flow-store-validate -->"))) | .id' \
+            | head -n1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@"$RUNNER_TEMP/body.md" > /dev/null
+          else
+            gh pr comment "$number" -R "$REPO" --body-file "$RUNNER_TEMP/body.md"
+          fi

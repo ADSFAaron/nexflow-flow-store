@@ -50,11 +50,11 @@ GITHUB_TOKEN 開的 PR 不會觸發 validate，所以 issue 投稿要用 App 開
    - Variables：`FLOW_STORE_APP_CLIENT_ID` ＝ Client ID
    - Secrets：`FLOW_STORE_APP_PRIVATE_KEY` ＝ 剛下載的 `.pem` 內容（存好後把檔案刪掉；要換就重新產生一把）
 
-### 5. 暫時的 CLI 來源
+### 5. （已不需要）暫時的 CLI 來源
 
-P1 合進 NexFlow `master` 之前，`master` 上沒有 `flow-store-tools`。
-Settings → Secrets and variables → Actions → Variables：`NEXFLOW_REF` ＝ `feat/flow-store-p1`。
-**P1 合進 master 後刪掉這個變數**，validate 與 submission 就回到用 `master`。
+P1 合進 NexFlow `master` 之前，曾用 repo 變數 `NEXFLOW_REF` 讓 validate 與 submission 改抓 P1 分支。
+P1 已於 NexFlow#40 合併，這個變數已刪除。之後若要讓 CI 暫時改用某個 NexFlow 分支，仍可在
+Settings → Secrets and variables → Actions → **Variables 分頁**設定 `NEXFLOW_REF`，用完記得刪。
 
 ### 6. master 的 Ruleset
 

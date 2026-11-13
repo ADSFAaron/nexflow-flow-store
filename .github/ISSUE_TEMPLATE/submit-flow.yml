@@ -1,0 +1,67 @@
+name: Submit a flow
+description: Add a flow to the store, or update one, without opening a pull request yourself.
+title: "Submit: "
+labels: [submission]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A bot reads this issue, checks the flow, and opens a pull request for you. Editing the issue runs the check again.
+
+        **This issue is public.** Before pasting, remove anything personal: Wi-Fi names, phone numbers, places, API tokens. The check moves those into "fill in when installing" fields, but whatever you paste here stays visible.
+
+        機器人會讀取這個 issue、檢查流程並替你開 pull request；編輯 issue 會重新檢查。**這個 issue 是公開的**，貼上前請先拿掉個人資訊（Wi-Fi 名稱、電話、地點、API token）。
+  - type: input
+    id: slug
+    attributes:
+      label: Slug
+      description: The flow's permanent id in the store, 3–50 lowercase letters, digits or hyphens. It can never change. Ignored when you paste a submission package from the app.
+      placeholder: quiet-at-night
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      description: The language of the title and description below.
+      options: [en, zh-TW, zh-CN, ja]
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: At most 60 characters.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What the flow does, and what someone should change after installing it.
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated, lowercase. For example `battery, sleep`.
+  - type: textarea
+    id: flow
+    attributes:
+      label: Flow
+      description: In NexFlow, open the flow, choose Export, and paste the whole file here. A submission package from the app's "Submit to store" works too.
+      render: json
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before you submit
+      options:
+        - label: I ran this flow on a real phone and it works.
+          required: true
+        - label: I wrote this flow, or have the right to share it. It is not copied from another app's templates.
+          required: true
+        - label: I dedicate this flow to the public domain under CC0 1.0.
+          required: true
+        - label: I removed personal information from what I pasted above.
+          required: true

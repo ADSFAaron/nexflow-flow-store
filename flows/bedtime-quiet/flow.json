@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "id": "77719cf5-92f7-4c1b-a17e-8522c1c0d841",
+  "name": "Bedtime quiet",
+  "description": "At 23:00 every night, turns on Do Not Disturb, lowers media volume to 20% and dims the screen. Change the time after installing if you go to bed earlier or later.",
+  "tags": [
+    "sleep",
+    "sound",
+    "display"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "239bc558-adb3-43d0-8347-8e0f4a0ed78c",
+      "type": "TIME",
+      "config": {
+        "time": "23:00",
+        "repeat": "DAILY",
+        "days": ""
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "2df57e66-8b5d-4304-a1e4-9440fac6b9d7",
+      "type": "DND_TOGGLE",
+      "config": {
+        "state": "ON"
+      },
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "8285d700-41f0-4b08-8a84-9aa543218d8d",
+      "type": "VOLUME_ADJUST",
+      "config": {
+        "stream": "MEDIA",
+        "volume_percent": "20"
+      },
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "2820879b-1812-4a5f-9b53-bfb60bea2812",
+      "type": "BRIGHTNESS_ADJUST",
+      "config": {
+        "level": "20",
+        "brightness_unit": "PCT",
+        "extra_dim": "false"
+      },
+      "order": 2,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

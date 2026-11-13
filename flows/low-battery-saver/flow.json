@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "id": "df752485-b211-48db-b0ab-912a8dbabf2c",
+  "name": "Low battery saver",
+  "description": "When the battery drops below 20% and the phone is not charging, dims the screen to 30%, lowers media volume and tells you it did.",
+  "tags": [
+    "battery",
+    "display"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "30cd3f12-3a92-48d7-bdca-8344a983676b",
+      "type": "BATTERY",
+      "config": {
+        "level": "20",
+        "direction": "BELOW",
+        "charging": "DISCHARGING"
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "353d15f5-14b4-4ced-968d-6c8951e8ada4",
+      "type": "BRIGHTNESS_ADJUST",
+      "config": {
+        "level": "30",
+        "brightness_unit": "PCT",
+        "extra_dim": "false"
+      },
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "56f7329f-cc9a-401d-8fc2-0bd7ca9517f5",
+      "type": "VOLUME_ADJUST",
+      "config": {
+        "stream": "MEDIA",
+        "volume_percent": "30"
+      },
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "2b68740f-b512-44d6-babc-9d37ca1f6295",
+      "type": "NOTIFICATION",
+      "config": {
+        "title": "Battery below 20%",
+        "message": "Screen dimmed and media volume lowered to save power.",
+        "tap_action": "NONE"
+      },
+      "order": 2,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "charged-unplug-reminder",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Unplug reminder",
+      "description": "While charging, tells you when the battery passes 90%. Many people stop there to keep the battery healthy over the years."
+    },
+    "zh-TW": {
+      "title": "充電到 90% 提醒",
+      "description": "充電時電量超過 90% 就通知你。很多人會在這時拔掉充電器，讓電池用得比較久。"
+    },
+    "zh-CN": {
+      "title": "充电到 90% 提醒",
+      "description": "充电时电量超过 90% 就通知你。很多人会在这时拔掉充电器，让电池用得更久。"
+    },
+    "ja": {
+      "title": "90% 充電お知らせ",
+      "description": "充電中にバッテリーが 90% を超えたら通知します。電池を長持ちさせるため、ここで充電をやめる人も多くいます。"
+    }
+  },
+  "tags": [
+    "battery",
+    "charging"
+  ],
+  "setup": []
+}

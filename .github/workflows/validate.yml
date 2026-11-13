@@ -1,0 +1,105 @@
+name: validate
+
+# Checks every flow with NexFlow's own rules (flow-store-tools, built from NexFlow at
+# vars.NEXFLOW_REF, or master when unset).
+#
+# Security: this runs on pull_request, so a pull request from a fork runs ITS OWN copy of this
+# file, with a read-only token and no secrets. Nothing here may need more than that. The result
+# goes out as an artifact; report-validate.yml turns it into a comment and treats it as untrusted.
+# That a fork can rewrite this file is also why CODEOWNERS covers .github/: a maintainer sees it.
+#
+# The weekly run catches the app moving under the store: a catalog change in NexFlow that makes a
+# published flow invalid. It opens an issue rather than mailing whoever last touched this file.
+
+on:
+  pull_request:
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the store
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: store
+          persist-credentials: false
+
+      - name: Check out the target branch, to compare versions against
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+
+      - name: Build flow-store-tools
+        id: tools
+        uses: ./store/.github/actions/flow-store-tools
+        with:
+          ref: ${{ vars.NEXFLOW_REF || 'master' }}
+
+      - name: Validate
+        env:
+          TOOLS: ${{ steps.tools.outputs.bin }}
+          CATALOG: ${{ steps.tools.outputs.catalog }}
+          NEXFLOW_SHA: ${{ steps.tools.outputs.sha }}
+        run: |
+          args=(validate --repo store --catalog "$CATALOG" --json result.json --format github)
+          if [ -d base ]; then args+=(--base base); fi
+          set +e
+          "$TOOLS" "${args[@]}"
+          status=$?
+          set -e
+          {
+            python3 -I store/.github/scripts/render_report.py result.json --mode summary
+            echo
+            echo "Checked with NexFlow \`$NEXFLOW_SHA\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Keep the result for report-validate
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validate-result
+          path: result.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  scheduled-failure:
+    needs: validate
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the ci-broken issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create ci-broken -R "$REPO" --color B60205 \
+            --description "The weekly check of published flows failed" 2>/dev/null || true
+          existing=$(gh issue list -R "$REPO" --label ci-broken --state open --json number -q '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" -R "$REPO" --body "Still failing: $RUN_URL"
+          else
+            gh issue create -R "$REPO" --label ci-broken --assignee "$OWNER" \
+              --title "Weekly flow check failed" \
+              --body "The weekly validation of published flows failed: $RUN_URL
+
+          Usually NexFlow's catalog changed (a step or setting was renamed or removed) and a published flow no longer passes. Fix the flow, mark it broken in revoked.json, or fix the app."
+          fi

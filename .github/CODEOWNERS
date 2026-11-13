@@ -1,0 +1,6 @@
+# Every change needs a maintainer's approval (the master ruleset requires code owner review).
+# .github/ is listed on its own because a pull request from a fork runs its own copy of
+# validate.yml: a change there is a change to what "the check passed" means.
+*          @ADSFAaron
+/.github/  @ADSFAaron
+/flows/    @ADSFAaron

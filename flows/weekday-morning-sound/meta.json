@@ -1,0 +1,27 @@
+{
+  "slug": "weekday-morning-sound",
+  "version": 1,
+  "languages": {
+    "en": {
+      "title": "Weekday morning sound",
+      "description": "At 07:00 on weekdays, turns Do Not Disturb off and sets the ringer to 70%, so you don't miss calls after a quiet night. Pairs well with “Bedtime quiet”."
+    },
+    "zh-TW": {
+      "title": "平日早晨恢復聲音",
+      "description": "平日早上 07:00 關閉「零打擾」，鈴聲音量設為 70%，避免安靜了一晚後漏接電話。可以和「睡前安靜模式」搭配使用。"
+    },
+    "zh-CN": {
+      "title": "工作日早晨恢复声音",
+      "description": "工作日早上 07:00 关闭“勿扰模式”，铃声音量设为 70%，避免安静一晚后漏接电话。可以和“睡前安静模式”搭配使用。"
+    },
+    "ja": {
+      "title": "平日の朝に音を戻す",
+      "description": "平日の朝 07:00 に「サイレントモード」をオフにし、着信音量を 70% にします。静かな夜のあとに電話を取り逃さないように。「おやすみモード」と組み合わせて使えます。"
+    }
+  },
+  "tags": [
+    "morning",
+    "sound"
+  ],
+  "setup": []
+}

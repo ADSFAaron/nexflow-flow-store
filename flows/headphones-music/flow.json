@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "2679b112-e6ff-4e7f-90a1-a4287063664f",
+  "name": "Music when headphones go in",
+  "description": "When you plug in wired headphones, sets media volume to 40% and opens your music app. You pick the app when installing.",
+  "tags": [
+    "audio",
+    "headphones"
+  ],
+  "enabled": false,
+  "created_at": "2026-11-11T00:00:00Z",
+  "updated_at": "2026-11-11T00:00:00Z",
+  "triggers": [
+    {
+      "id": "74a9fffd-37d4-440a-8cc4-8638e3c7b0ba",
+      "type": "HEADSET_PLUG",
+      "config": {
+        "event": "CONNECTED"
+      }
+    }
+  ],
+  "trigger_logic": "ANY",
+  "conditions": [],
+  "actions": [
+    {
+      "id": "943ec2e3-1192-4c9d-9e9e-62c60c789211",
+      "type": "VOLUME_ADJUST",
+      "config": {
+        "stream": "MEDIA",
+        "volume_percent": "40"
+      },
+      "order": 0,
+      "enabled": true
+    },
+    {
+      "id": "af015b16-c16f-4679-ac92-78839f528331",
+      "type": "OPEN_APP",
+      "config": {
+        "package_name": ""
+      },
+      "order": 1,
+      "enabled": true
+    }
+  ],
+  "variables": [],
+  "global_variables": []
+}

@@ -1,0 +1,172 @@
+name: submission
+
+# Turns a "Submit a flow" issue into a pull request.
+#
+#   check    reads the issue (through an environment variable only), builds the flow's files,
+#            validates them, and comments on the issue. Default-branch code, GITHUB_TOKEN with
+#            issues: write, no secrets.
+#   open-pr  only when check passed: commits the files as the issue's author and opens the PR
+#            with the flow store App's token. It runs no NexFlow code and nothing from the issue.
+#
+# Why an App: a PR opened with GITHUB_TOKEN does not trigger other workflows, so validate would
+# never run on it. The App has only contents and pull-requests write — no workflows, no
+# administration — so a leaked token can open junk PRs, which the ruleset still keeps out of
+# master. Setup: MAINTAINING.md.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions: {}
+
+concurrency:
+  group: submission-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: >-
+      github.event.issue.state == 'open' &&
+      contains(github.event.issue.labels.*.name, 'submission')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    outputs:
+      ok: ${{ steps.validate.outputs.ok }}
+      slug: ${{ steps.validate.outputs.slug }}
+    steps:
+      - name: Check out the store (default branch)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: store
+          persist-credentials: false
+
+      - name: Build flow-store-tools
+        id: tools
+        uses: ./store/.github/actions/flow-store-tools
+        with:
+          ref: ${{ vars.NEXFLOW_REF || 'master' }}
+
+      - name: Read the issue
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          TOOLS: ${{ steps.tools.outputs.bin }}
+        run: |
+          python3 -I store/.github/scripts/submission.py prepare \
+            --store store --candidate candidate --tools "$TOOLS" --out "$RUNNER_TEMP/submission"
+
+      - name: Validate
+        id: validate
+        env:
+          TOOLS: ${{ steps.tools.outputs.bin }}
+          CATALOG: ${{ steps.tools.outputs.catalog }}
+          OUT: ${{ runner.temp }}/submission
+        run: |
+          set -euo pipefail
+          slug=$(jq -r '.slug // empty' "$OUT/info.json")
+          error=$(jq -r '.error // empty' "$OUT/info.json")
+          ok=false
+          if [ -z "$error" ]; then
+            set +e
+            "$TOOLS" validate --repo candidate --catalog "$CATALOG" --base store --json "$OUT/result.json"
+            status=$?
+            set -e
+            python3 -I store/.github/scripts/render_report.py "$OUT/result.json" --only "$slug" > "$OUT/report.md"
+            if [ "$status" = 0 ]; then ok=true; fi
+            mkdir -p "$OUT/flow"
+            cp "candidate/flows/$slug/flow.json" "candidate/flows/$slug/meta.json" "$OUT/flow/"
+          fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          OK: ${{ steps.validate.outputs.ok }}
+          OUT: ${{ runner.temp }}/submission
+        run: |
+          set -euo pipefail
+          python3 -I store/.github/scripts/submission.py comment \
+            --info "$OUT/info.json" --report "$OUT/report.md" --ok "$OK" > "$OUT/comment.md"
+          existing=$(gh api --paginate "repos/$REPO/issues/$NUMBER/comments" \
+            -q '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- flow-store-submission -->"))) | .id' \
+            | head -n1)
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F body=@"$OUT/comment.md" > /dev/null
+          else
+            gh issue comment "$NUMBER" -R "$REPO" --body-file "$OUT/comment.md"
+          fi
+
+      - name: Keep the flow's files for open-pr
+        if: steps.validate.outputs.ok == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: submission
+          path: ${{ runner.temp }}/submission/flow
+          retention-days: 1
+
+  open-pr:
+    needs: check
+    if: needs.check.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Get the flow store App's token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FLOW_STORE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FLOW_STORE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Check out the store
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ steps.app.outputs.token }}
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: submission
+          path: ${{ runner.temp }}/flow
+
+      - name: Commit as the issue's author and open the pull request
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          SLUG: ${{ needs.check.outputs.slug }}
+          LOGIN: ${{ github.event.issue.user.login }}
+          USER_ID: ${{ github.event.issue.user.id }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          FLOW: ${{ runner.temp }}/flow
+        run: |
+          set -euo pipefail
+          [[ "$SLUG" =~ ^[a-z0-9-]{3,50}$ ]] || { echo "bad slug"; exit 1; }
+          branch="submission/issue-$NUMBER"
+          git switch -C "$branch"
+          rm -rf "flows/$SLUG"
+          mkdir -p "flows/$SLUG"
+          cp "$FLOW/flow.json" "$FLOW/meta.json" "flows/$SLUG/"
+          git add "flows/$SLUG"
+          if git diff --cached --quiet; then
+            echo "The submission matches master already; nothing to propose."
+            exit 0
+          fi
+          # The noreply address ties the commit to the submitter's account, which is how
+          # publish.yml credits them as the flow's author.
+          git -c user.name="$APP_SLUG[bot]" -c user.email="$APP_SLUG[bot]@users.noreply.github.com" \
+            commit -q --author="$LOGIN <$USER_ID+$LOGIN@users.noreply.github.com>" \
+            -m "flows/$SLUG: submitted in #$NUMBER"
+          git push -f origin "$branch"
+          if [ -z "$(gh pr list -R "$REPO" --head "$branch" --state open --json number -q '.[0].number')" ]; then
+            gh pr create -R "$REPO" --head "$branch" --base master \
+              --title "flows/$SLUG: submitted in #$NUMBER" \
+              --body "Submitted by @$LOGIN in #$NUMBER. Edits to the issue update this pull request.
+
+          Closes #$NUMBER"
+          fi

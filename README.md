@@ -1,27 +1,28 @@
 # NexFlow Flow Store
 
-> 🚧 **Under construction** — not accepting submissions yet. / **建置中**：目前還不接受投稿。
+[中文說明](README.zh-TW.md)
 
-A community collection of ready-made automations for [NexFlow](https://github.com/ADSFAaron/NexFlow).
+Ready-made automations for [NexFlow](https://github.com/ADSFAaron/NexFlow), shared by its users.
 
-- Browse and install flows directly from the app.
-- Flows that need personal values, such as your Wi-Fi name or a phone number, ask for them at install time.
+> **Status:** being set up. The in-app store arrives in a coming NexFlow version; until then you can read the flows here.
 
-社群共享的 [NexFlow](https://github.com/ADSFAaron/NexFlow) 現成流程，可以在 App 內直接瀏覽、安裝。需要個人資訊的欄位（例如 Wi-Fi 名稱、電話號碼）會在安裝時請你填寫。
+- **Browse:** <https://adsfaaron.github.io/nexflow-flow-store/> — a page per flow that says what it does, what it asks you to fill in, and which risky actions (SMS, calls, web requests…) it uses.
+- **Install:** from the app. A store flow arrives switched off, and anything personal (your Wi-Fi name, a phone number, which app to open) is asked for at install time, never shipped in the flow.
+- **Contribute:** see [CONTRIBUTING.md](CONTRIBUTING.md). You can open a pull request, or fill in an issue form and let a bot open one for you.
+- **Report a flow:** [open a report](https://github.com/ADSFAaron/nexflow-flow-store/issues/new?template=report-flow.yml). What happens next is in [MODERATION.md](MODERATION.md).
+- **Security problems** with the store itself: [SECURITY.md](SECURITY.md).
 
-## Status / 進度
+## How a flow gets here
 
-- Store repo setup / 商店 repo 本身：[#1](https://github.com/ADSFAaron/nexflow-flow-store/issues/1)
-- App side, starting point / App 端起點：[ADSFAaron/NexFlow#12](https://github.com/ADSFAaron/NexFlow/issues/12)
+1. Someone proposes it (pull request or issue form).
+2. A check runs NexFlow's own validator on it: every step and setting must exist in the app, personal values must be left for the installer, data a stranger can control (an SMS body, a web reply) may not reach anything that sends or opens, web addresses must be fixed `https` hosts, and more.
+3. A maintainer reviews and merges it.
+4. The store is rebuilt and signed. The app checks the signature and each flow's checksum before installing anything.
 
-## ⚠️ Do not rename this repository / 請勿更改此 repo 名稱
+## ⚠️ Do not rename this repository
 
-The app downloads the catalogue from `https://adsfaaron.github.io/nexflow-flow-store/`, and that URL is built into every released version. Renaming this repository or the `ADSFAaron` account would break the store for all existing installs, because GitHub Pages does not redirect.
+The app downloads the store from `https://adsfaaron.github.io/nexflow-flow-store/`, and that address is built into every released version. Renaming this repository or the `ADSFAaron` account would break the store for every existing install, because GitHub Pages does not redirect.
 
-App 從 `https://adsfaaron.github.io/nexflow-flow-store/` 下載商店目錄，這個網址寫死在所有已發佈的版本裡。更改這個 repo 或 `ADSFAaron` 帳號的名稱，所有已安裝的 App 都會連不上商店（GitHub Pages 不會轉址）。
-
-## License / 授權
+## License
 
 Flows in this repository are dedicated to the public domain under [CC0 1.0](LICENSE).
-
-本 repo 的流程以 [CC0 1.0](LICENSE) 釋出到公有領域。
